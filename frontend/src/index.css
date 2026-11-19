@@ -4,40 +4,52 @@
 
 @layer base {
   body {
-    @apply bg-[#08090E] text-slate-100 antialiased;
+    @apply bg-[#05060A] text-slate-100 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(230, 36, 41, 0.15), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 90% 80%, rgba(16, 185, 129, 0.08), transparent 60%),
+      radial-gradient(ellipse 50% 30% at 10% 70%, rgba(0, 229, 255, 0.08), transparent 50%);
+    background-attachment: fixed;
   }
 }
 
-/* Custom glow and glassmorphism helpers */
+/* Cinematic Glow & Glass Effects */
 .glass-panel {
-  background: rgba(17, 20, 34, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 20, 38, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-panel-cinema {
+  background: linear-gradient(135deg, rgba(22, 28, 52, 0.85) 0%, rgba(10, 13, 24, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glow-cyan-border {
   border-color: rgba(0, 229, 255, 0.5);
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
 }
 
 .glow-red-border {
   border-color: rgba(230, 36, 41, 0.6);
-  box-shadow: 0 0 20px rgba(230, 36, 41, 0.25);
+  box-shadow: 0 0 25px rgba(230, 36, 41, 0.3);
 }
 
-/* Custom scrollbar */
+/* Smooth custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0D17;
+  background: #05060A;
 }
 ::-webkit-scrollbar-thumb {
-  background: #232946;
-  border-radius: 3px;
+  background: #1F2947;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00E5FF;
+  background: #E62429;
 }

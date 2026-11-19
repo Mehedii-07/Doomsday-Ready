@@ -53,7 +53,6 @@ export const MovieModal: React.FC<MovieModalProps> = ({
         watched,
         prerequisite_ids: selectedPrereqIds,
       });
-      // Reset form and close
       setTitle('');
       setReleaseYear(new Date().getFullYear());
       setRuntime(120);
@@ -68,49 +67,49 @@ export const MovieModal: React.FC<MovieModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-mcu-card border border-mcu-border rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-mcu-card border border-white/10 rounded-3xl shadow-cinematic overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-mcu-border/80 bg-mcu-dark/60">
-          <div className="flex items-center space-x-2">
-            <Film className="w-5 h-5 text-mcu-cyan" />
-            <h3 className="text-lg font-bold text-white tracking-wide">Add New MCU Movie</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-mcu-dark/80">
+          <div className="flex items-center space-x-2.5">
+            <Film className="w-5 h-5 text-mcu-red" />
+            <h3 className="font-cinematic text-2xl text-white tracking-wide uppercase">Add MCU Premiere</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+            className="text-slate-400 hover:text-white transition-colors p-1.5 rounded-xl hover:bg-white/10"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Form Body with mobile scroll */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {error && (
-            <div className="flex items-start space-x-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="flex items-start space-x-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs sm:text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
               Movie Title
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Fantastic Four: First Steps"
+              placeholder="e.g. Avengers: Secret Wars"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white placeholder-slate-500 focus:outline-none focus:border-mcu-cyan focus:ring-1 focus:ring-mcu-cyan transition-all text-sm"
+              className="w-full px-4 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white text-sm focus:outline-none focus:border-mcu-red font-sans"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                <Calendar className="w-3.5 h-3.5 text-mcu-gold" />
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center space-x-1">
+                <Calendar className="w-3.5 h-3.5 text-yellow-400" />
                 <span>Release Year</span>
               </label>
               <input
@@ -120,14 +119,14 @@ export const MovieModal: React.FC<MovieModalProps> = ({
                 max={2050}
                 value={releaseYear}
                 onChange={e => setReleaseYear(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white focus:outline-none focus:border-mcu-cyan text-sm"
+                className="w-full px-4 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white text-sm focus:outline-none focus:border-mcu-red font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                <Clock className="w-3.5 h-3.5 text-mcu-cyan" />
-                <span>Runtime (mins, 1-300)</span>
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center space-x-1">
+                <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Runtime (1-300 min)</span>
               </label>
               <input
                 type="number"
@@ -136,45 +135,45 @@ export const MovieModal: React.FC<MovieModalProps> = ({
                 max={300}
                 value={runtime}
                 onChange={e => setRuntime(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white focus:outline-none focus:border-mcu-cyan text-sm"
+                className="w-full px-4 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white text-sm focus:outline-none focus:border-mcu-red font-mono"
               />
             </div>
           </div>
 
           {/* Watched Status */}
-          <div className="flex items-center space-x-2 pt-1">
+          <div className="flex items-center space-x-2.5 pt-1">
             <input
               type="checkbox"
               id="new-movie-watched"
               checked={watched}
               onChange={e => setWatched(e.target.checked)}
-              className="w-4 h-4 rounded border-mcu-border text-mcu-cyan focus:ring-mcu-cyan bg-mcu-dark"
+              className="w-4 h-4 rounded border-mcu-border text-emerald-500 focus:ring-emerald-500 bg-mcu-dark cursor-pointer"
             />
             <label htmlFor="new-movie-watched" className="text-sm font-medium text-slate-300 cursor-pointer">
-              I have already watched this movie
+              Mark as already watched in theaters
             </label>
           </div>
 
           {/* Prerequisites Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
-              <CheckSquare className="w-3.5 h-3.5 text-mcu-cyan" />
-              <span>Prerequisites (Movies to watch before this)</span>
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center space-x-1">
+              <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Select Transitive Prerequisites</span>
             </label>
-            <div className="max-h-40 overflow-y-auto p-2.5 rounded-xl bg-mcu-dark border border-mcu-border space-y-1.5">
+            <div className="max-h-48 overflow-y-auto p-2.5 rounded-xl bg-mcu-dark border border-mcu-border space-y-1.5">
               {existingMovies.length === 0 ? (
                 <p className="text-xs text-slate-500 py-1">No other movies available</p>
               ) : (
                 existingMovies.map(movie => (
                   <label
                     key={movie.id}
-                    className="flex items-center space-x-2.5 p-1.5 rounded-lg hover:bg-white/5 cursor-pointer text-sm text-slate-300 transition-colors"
+                    className="flex items-center space-x-2.5 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-xs sm:text-sm text-slate-300 transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selectedPrereqIds.includes(movie.id)}
                       onChange={() => handlePrereqToggle(movie.id)}
-                      className="w-4 h-4 rounded border-mcu-border text-mcu-cyan focus:ring-mcu-cyan bg-mcu-dark"
+                      className="w-4 h-4 rounded border-mcu-border text-cyan-400 focus:ring-cyan-400 bg-mcu-dark"
                     />
                     <span className="truncate">{movie.title} ({movie.release_year})</span>
                   </label>
@@ -184,25 +183,21 @@ export const MovieModal: React.FC<MovieModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-mcu-border">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-mcu-red to-mcu-redDark hover:opacity-90 text-white shadow-glow-red transition-all flex items-center space-x-2"
+              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-mcu-red to-red-700 hover:brightness-110 text-white shadow-glow-red transition-all"
             >
-              {loading ? (
-                <span>Adding Movie...</span>
-              ) : (
-                <span>Save Movie</span>
-              )}
+              {loading ? 'Creating...' : 'Save Premiere'}
             </button>
           </div>
         </form>

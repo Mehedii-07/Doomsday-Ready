@@ -5,10 +5,11 @@ import {
   CheckCircle2,
   Circle,
   Play,
-  Film,
   Calendar,
   AlertCircle,
   TrendingUp,
+  Clapperboard,
+  Check,
 } from 'lucide-react';
 import { Movie, RewatchPlan } from '../types';
 import { api } from '../services/api';
@@ -31,7 +32,6 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Default to Avengers: Doomsday if available, else first movie
   useEffect(() => {
     if (!selectedMovieId && movies.length > 0) {
       const doomsday = movies.find(m => m.title.includes('Doomsday'));
@@ -43,7 +43,6 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
     }
   }, [movies, selectedMovieId, onSelectMovieId]);
 
-  // Fetch rewatch order when selectedMovieId changes
   const fetchPlan = async (id: number) => {
     try {
       setLoading(true);
@@ -67,9 +66,7 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
     try {
       setTogglingId(movie.id);
       await api.updateMovie(movie.id, { watched: !movie.watched });
-      // Notify parent to refresh global state
       await onMovieWatchedToggled();
-      // Re-fetch current plan to recalculate stats
       if (selectedMovieId) {
         await fetchPlan(selectedMovieId);
       }
@@ -90,39 +87,44 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
 
   const currentMovie = movies.find(m => m.id === selectedMovieId);
 
-  // Compute progress percentage
   const totalCount = plan?.total_count || 0;
   const watchedCount = plan?.watched_count || 0;
   const progressPct = totalCount > 0 ? Math.round((watchedCount / totalCount) * 100) : 100;
 
   return (
-    <div className="space-y-6">
-      {/* Target Selector Header */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-mcu-card via-mcu-dark to-mcu-card border border-mcu-border">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-mcu-cyan/10 border border-mcu-cyan/30 text-mcu-cyan text-xs font-bold tracking-wider uppercase mb-3">
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+      {/* Cinematic Marquee Header & Controls */}
+      <div className="relative rounded-3xl p-6 sm:p-10 border border-white/10 bg-gradient-to-br from-[#11172A] via-[#090C16] to-[#05060A] shadow-cinematic overflow-hidden">
+        {/* Neon Light Flares */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-mcu-cyan/15 rounded-full blur-[90px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-mcu-red/15 rounded-full blur-[90px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Topological Sort Watch Order</span>
+              <span>TOPOLOGICAL SORT REWATCH TIMELINE</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Curated Rewatch Roadmap
+
+            <h1 className="font-cinematic text-3xl sm:text-4xl lg:text-5xl tracking-wider text-white uppercase leading-none">
+              Roadmap For: <span className="text-transparent bg-clip-text bg-gradient-to-r from-mcu-cyan via-blue-400 to-emerald-400">{currentMovie?.title || 'Selected Premiere'}</span>
             </h1>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-              Select any target movie to generate its mathematically verified prerequisite sequence using Kahn's topological sort.
+
+            <p className="text-xs sm:text-sm text-slate-300 font-sans leading-relaxed">
+              Every prerequisite is mathematically organized using Kahn's DAG algorithm so every required plot milestone is watched strictly in chronological order before the target premiere.
             </p>
           </div>
 
-          {/* Target Movie Dropdown */}
-          <div className="w-full md:w-80 flex-shrink-0">
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
-              <Film className="w-3.5 h-3.5 text-mcu-cyan" />
-              <span>Target Premiere Movie</span>
+          {/* Premiere Target Dropdown */}
+          <div className="w-full lg:w-80 flex-shrink-0 bg-black/50 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+            <label className="block text-xs font-mono uppercase tracking-widest text-slate-400 mb-1.5 flex items-center space-x-1.5 font-bold">
+              <Clapperboard className="w-3.5 h-3.5 text-mcu-cyan" />
+              <span>Target Premiere</span>
             </label>
             <select
               value={selectedMovieId || ''}
               onChange={e => onSelectMovieId(Number(e.target.value))}
-              className="w-full px-4 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white text-sm font-semibold focus:outline-none focus:border-mcu-cyan focus:ring-1 focus:ring-mcu-cyan transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-mcu-dark border border-mcu-border text-white text-sm font-semibold focus:outline-none focus:border-mcu-cyan focus:ring-2 focus:ring-mcu-cyan/20 transition-all font-sans"
             >
               {movies.map(m => (
                 <option key={m.id} value={m.id}>
@@ -133,40 +135,50 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
           </div>
         </div>
 
-        {/* Progress & Stats Card */}
+        {/* Progress & Runtime Theatrical Meter */}
         {plan && (
-          <div className="mt-8 pt-6 border-t border-mcu-border/70 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            {/* Progress Bar */}
-            <div className="md:col-span-2 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-semibold text-slate-200 flex items-center space-x-2">
+          <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            {/* Progress Gauge */}
+            <div className="md:col-span-2 space-y-3">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="font-bold text-slate-200 flex items-center space-x-2 font-mono uppercase tracking-wider">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                   <span>
-                    Prerequisite Progress: <strong className="text-white">{watchedCount} of {totalCount} watched</strong>
+                    Prerequisite Completion: <strong className="text-white font-sans">{watchedCount} of {totalCount} Seen</strong>
                   </span>
                 </span>
-                <span className="font-mono font-bold text-mcu-cyan">{progressPct}%</span>
+                <span className="font-mono font-extrabold text-base sm:text-lg text-mcu-cyan">
+                  {progressPct}%
+                </span>
               </div>
-              <div className="w-full h-3.5 rounded-full bg-mcu-dark overflow-hidden border border-mcu-border p-0.5">
+
+              {/* Glowing High-Tech Progress Bar */}
+              <div className="w-full h-4 rounded-full bg-black/60 overflow-hidden border border-white/10 p-0.5 shadow-inner">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-mcu-cyan via-blue-500 to-emerald-400 transition-all duration-500 shadow-glow-cyan"
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-emerald-400 transition-all duration-700 shadow-glow-cyan"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>0% Initiation</span>
+                <span>50% Infinity War</span>
+                <span>100% Doomsday Ready</span>
+              </div>
             </div>
 
-            {/* Remaining Runtime */}
-            <div className="p-4 rounded-xl bg-mcu-dark/80 border border-mcu-border flex items-center space-x-3">
-              <div className="p-2.5 rounded-lg bg-mcu-cyan/10 text-mcu-cyan">
-                <Clock className="w-6 h-6" />
+            {/* Remaining Runtime Card */}
+            <div className="p-5 rounded-2xl bg-[#080B15]/90 border border-white/10 flex items-center space-x-4 shadow-lg">
+              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex-shrink-0">
+                <Clock className="w-7 h-7" />
               </div>
               <div>
-                <span className="text-xs text-slate-400 uppercase tracking-wider block font-semibold">
-                  Remaining Watch Time
+                <span className="text-[11px] text-slate-400 uppercase tracking-widest font-mono font-bold block">
+                  Remaining Screen Time
                 </span>
-                <span className="text-base sm:text-lg font-bold text-white block">
+                <span className="text-lg sm:text-xl font-bold font-cinematic tracking-wide text-white block mt-0.5">
                   {plan.remaining_runtime === 0
-                    ? 'All Caught Up! 🎉'
+                    ? 'READY FOR DOOMSDAY 🎉'
                     : formatRuntime(plan.remaining_runtime)}
                 </span>
               </div>
@@ -175,114 +187,125 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
         )}
       </div>
 
-      {/* Ordered Prerequisite List */}
+      {/* Ordered Prerequisite Timeline List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white tracking-wide flex items-center space-x-2">
-            <Play className="w-4 h-4 text-mcu-red" />
-            <span>
-              Rewatch Order for <span className="text-mcu-cyan">{currentMovie?.title}</span>
-            </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="font-cinematic text-2xl sm:text-3xl tracking-wide text-white flex items-center space-x-2 uppercase">
+            <Play className="w-5 h-5 text-mcu-red fill-mcu-red" />
+            <span>Chronological Prerequisite Sequence</span>
           </h2>
           {plan && (
-            <span className="text-xs text-slate-400 bg-mcu-card px-3 py-1 rounded-full border border-mcu-border">
-              {plan.total_count} prerequisite movie{plan.total_count !== 1 ? 's' : ''} in total
+            <span className="text-xs font-mono text-slate-400 bg-mcu-card/80 px-3 py-1 rounded-full border border-mcu-border self-start sm:self-auto">
+              {plan.total_count} Transitive Steps
             </span>
           )}
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-slate-400 space-x-2">
-            <div className="w-6 h-6 border-2 border-mcu-cyan border-t-transparent rounded-full animate-spin" />
-            <span>Calculating topological order...</span>
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-3">
+            <div className="w-8 h-8 border-3 border-mcu-cyan border-t-transparent rounded-full animate-spin" />
+            <span className="font-mono text-xs uppercase tracking-wider">Solving Kahn's Topological Sort...</span>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center space-x-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="p-5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center space-x-3">
+            <AlertCircle className="w-6 h-6 flex-shrink-0" />
+            <span className="text-sm">{error}</span>
           </div>
         ) : !plan || plan.rewatch_order.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-mcu-card border border-mcu-border text-center">
-            <Sparkles className="w-10 h-10 text-mcu-gold mx-auto mb-2" />
-            <h3 className="text-lg font-bold text-white">No Prerequisites Required!</h3>
-            <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
-              <strong>{currentMovie?.title}</strong> is a standalone entry or the beginning of this MCU storyline branch. You can jump straight in!
+          <div className="p-10 sm:p-14 rounded-3xl bg-mcu-card border border-white/10 text-center space-y-3">
+            <Sparkles className="w-12 h-12 text-yellow-400 mx-auto" />
+            <h3 className="font-cinematic text-3xl text-white tracking-wider">Zero Prerequisites Required!</h3>
+            <p className="text-sm text-slate-300 max-w-md mx-auto">
+              <strong>{currentMovie?.title}</strong> is a self-contained saga genesis or standalone milestone. You are ready to stream immediately!
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="relative pl-6 sm:pl-8 space-y-4 before:absolute before:left-3 sm:before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-cyan-500 before:via-blue-500 before:to-emerald-500">
             {plan.rewatch_order.map((movie, index) => {
               const isToggling = togglingId === movie.id;
               return (
                 <div
                   key={movie.id}
-                  className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+                  className={`group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 gap-4 ${
                     movie.watched
-                      ? 'bg-mcu-card/70 border-emerald-500/30 opacity-80 hover:opacity-100'
-                      : 'bg-mcu-card border-mcu-border hover:border-mcu-cyan/50 hover:shadow-glow-cyan'
+                      ? 'bg-emerald-950/20 border-emerald-500/30 opacity-85 hover:opacity-100 shadow-[0_0_15px_rgba(16,185,129,0.06)]'
+                      : 'bg-mcu-card border-mcu-border hover:border-mcu-cyan/70 hover:shadow-glow-cyan'
                   }`}
                 >
-                  <div className="flex items-center space-x-4">
-                    {/* Step badge */}
-                    <div className="w-8 h-8 rounded-lg bg-mcu-dark border border-mcu-border flex items-center justify-center text-xs font-mono font-bold text-mcu-cyan flex-shrink-0">
-                      #{index + 1}
-                    </div>
+                  {/* Timeline Node Pin */}
+                  <div
+                    className={`absolute -left-[31px] sm:-left-[39px] top-6 w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                      movie.watched
+                        ? 'bg-emerald-500 border-emerald-300 text-black shadow-glow-doom'
+                        : 'bg-[#080B15] border-cyan-400 text-cyan-300'
+                    }`}
+                  >
+                    {movie.watched ? (
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    ) : (
+                      <span className="text-[10px] font-mono font-bold">{index + 1}</span>
+                    )}
+                  </div>
 
+                  {/* Left Info & Title */}
+                  <div className="flex items-center space-x-3.5">
                     {/* Interactive Watch Checkbox */}
                     <button
                       onClick={() => handleToggleWatched(movie)}
                       disabled={isToggling}
-                      className="text-left focus:outline-none flex items-center space-x-2"
-                      title={movie.watched ? 'Click to mark as unwatched' : 'Click to mark as watched'}
+                      className="p-1 rounded-lg text-left focus:outline-none group/chk"
+                      title={movie.watched ? 'Click to mark unwatched' : 'Click to mark watched'}
                     >
                       {movie.watched ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                        <CheckCircle2 className="w-6 h-6 text-emerald-400 group-hover/chk:scale-110 transition-transform" />
                       ) : (
-                        <Circle className="w-5 h-5 text-slate-500 hover:text-mcu-cyan transition-colors" />
+                        <Circle className="w-6 h-6 text-slate-500 group-hover/chk:text-cyan-400 transition-colors" />
                       )}
                     </button>
 
                     <div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                         <span
-                          className={`font-bold text-sm sm:text-base ${
+                          className={`font-cinematic text-2xl tracking-wide ${
                             movie.watched ? 'text-slate-300 line-through' : 'text-white'
                           }`}
                         >
                           {movie.title}
                         </span>
+
                         {movie.watched && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            Watched
+                          <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Completed ✓
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center space-x-3 text-xs text-slate-400 mt-0.5">
+
+                      <div className="flex items-center space-x-3 text-xs text-slate-400 font-mono mt-0.5">
                         <span className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3 text-mcu-gold" />
+                          <Calendar className="w-3 h-3 text-yellow-400" />
                           <span>{movie.release_year}</span>
                         </span>
                         <span>&bull;</span>
                         <span className="flex items-center space-x-1">
-                          <Clock className="w-3 h-3 text-mcu-cyan" />
-                          <span>{movie.runtime} mins</span>
+                          <Clock className="w-3 h-3 text-cyan-400" />
+                          <span>{movie.runtime} min ({formatRuntime(movie.runtime)})</span>
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right side helper info */}
-                  <div className="hidden sm:flex items-center space-x-2">
+                  {/* Right Action Button */}
+                  <div className="flex items-center justify-end sm:flex-shrink-0">
                     <button
                       onClick={() => handleToggleWatched(movie)}
                       disabled={isToggling}
-                      className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition-all ${
+                      className={`w-full sm:w-auto px-4 py-2 rounded-xl border text-xs font-mono font-bold tracking-wider uppercase transition-all ${
                         movie.watched
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                          : 'border-mcu-border bg-mcu-dark text-slate-300 hover:border-mcu-cyan/40 hover:text-white'
+                          : 'border-white/10 bg-black/40 text-slate-200 hover:border-cyan-400 hover:text-cyan-300'
                       }`}
                     >
-                      {movie.watched ? 'Watched ✓' : 'Mark as Done'}
+                      {movie.watched ? 'Mark as Unwatched' : 'Mark as Watched'}
                     </button>
                   </div>
                 </div>
