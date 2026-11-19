@@ -147,7 +147,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
 
           <button
             onClick={() => setIsAddCinemaOpen(true)}
-            className="self-start lg:self-center flex items-center space-x-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-mono text-xs font-bold uppercase tracking-wider border border-white/10 transition-all flex-shrink-0"
+            className="self-start lg:self-center flex items-center space-x-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-yellow-500/20 to-amber-500/20 hover:from-yellow-500 hover:to-amber-600 hover:text-black text-yellow-300 font-mono text-xs font-bold uppercase tracking-wider border border-yellow-500/40 shadow-glow-gold transition-all flex-shrink-0"
           >
             <Plus className="w-4 h-4 text-yellow-400" />
             <span>Add Venue</span>
@@ -162,7 +162,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
             <button
               onClick={() => handleQuickPreset('Grand Premiere', 44)}
-              className="p-3.5 rounded-xl bg-[#090E20]/90 border border-white/10 hover:border-yellow-400 text-left transition-all group shadow-sm"
+              className="p-3.5 rounded-2xl bg-[#090E20]/90 border border-white/10 hover:border-yellow-400 text-left transition-all group shadow-sm hover:shadow-glow-gold"
             >
               <div className="text-xs font-cinematic text-white group-hover:text-yellow-400 tracking-wide text-base">
                 Grand Premiere Hall
@@ -174,7 +174,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
 
             <button
               onClick={() => handleQuickPreset('Starplex', 6)}
-              className="p-3.5 rounded-xl bg-[#090E20]/90 border border-white/10 hover:border-cyan-400 text-left transition-all group shadow-sm"
+              className="p-3.5 rounded-2xl bg-[#090E20]/90 border border-white/10 hover:border-cyan-400 text-left transition-all group shadow-sm hover:shadow-glow-cyan"
             >
               <div className="text-xs font-cinematic text-white group-hover:text-cyan-400 tracking-wide text-base">
                 Starplex IMAX
@@ -186,7 +186,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
 
             <button
               onClick={() => handleQuickPreset('Metro', 11)}
-              className="p-3.5 rounded-xl bg-[#090E20]/90 border border-white/10 hover:border-blue-400 text-left transition-all group shadow-sm"
+              className="p-3.5 rounded-2xl bg-[#090E20]/90 border border-white/10 hover:border-blue-400 text-left transition-all group shadow-sm hover:shadow-glow-cyan"
             >
               <div className="text-xs font-cinematic text-white group-hover:text-blue-400 tracking-wide text-base">
                 Metro Cinema
@@ -198,7 +198,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
 
             <button
               onClick={() => handleQuickPreset('Indie', 7)}
-              className="p-3.5 rounded-xl bg-[#090E20]/90 border border-white/10 hover:border-red-400 text-left transition-all group shadow-sm"
+              className="p-3.5 rounded-2xl bg-[#090E20]/90 border border-white/10 hover:border-red-400 text-left transition-all group shadow-sm hover:shadow-glow-red"
             >
               <div className="text-xs font-cinematic text-white group-hover:text-red-400 tracking-wide text-base">
                 Indie Screen
@@ -211,36 +211,38 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
         </div>
       </div>
 
-      {/* Main Interactive Controls */}
+      {/* Main Interactive Controls with Upgraded Field Area CSS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Left Venue & Configuration */}
-        <div className="lg:col-span-1 p-6 rounded-3xl bg-astral-surface/90 border border-astral-border space-y-6 shadow-lg">
+        {/* Left Venue & Configuration Form Area */}
+        <div className="lg:col-span-1 p-6 sm:p-7 rounded-3xl bg-astral-surface/90 border border-astral-border space-y-6 shadow-xl">
           <h2 className="font-cinematic text-2xl tracking-wide text-white flex items-center space-x-2 uppercase">
             <Building className="w-5 h-5 text-yellow-400" />
             <span>Select Theater & Guests</span>
           </h2>
 
-          {/* Select Cinema */}
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-2">
+          {/* Select Cinema Field */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
               Cinema Venue
             </label>
-            <select
-              value={selectedCinemaId || ''}
-              onChange={e => setSelectedCinemaId(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-astral-card border border-astral-border text-white text-sm font-semibold focus:outline-none focus:border-yellow-400 transition-all font-sans"
-            >
-              {cinemas.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedCinemaId || ''}
+                onChange={e => setSelectedCinemaId(Number(e.target.value))}
+                className="w-full px-4 py-3.5 rounded-2xl cinematic-select text-sm font-semibold tracking-wide"
+              >
+                {cinemas.map(c => (
+                  <option key={c.id} value={c.id} className="bg-[#090E20] text-white">
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Bundle Sizes Display */}
           {selectedCinema && (
-            <div className="p-4 rounded-2xl bg-[#080D1C] border border-white/5 space-y-2">
+            <div className="p-4 rounded-2xl bg-[#080D1C] border border-white/10 space-y-2 shadow-inner">
               <span className="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-400 block">
                 Available Seat Bundle Sizes
               </span>
@@ -248,7 +250,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                 {selectedCinema.bundle_sizes.map(size => (
                   <span
                     key={size}
-                    className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs font-mono font-bold shadow-sm"
+                    className="px-3 py-1.5 rounded-xl bg-yellow-500/15 border border-yellow-500/35 text-yellow-300 text-xs font-mono font-bold shadow-sm"
                   >
                     {size} seats
                   </span>
@@ -257,14 +259,14 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
             </div>
           )}
 
-          {/* Party Size Input */}
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+          {/* Party Size Input Field */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
               <span className="flex items-center space-x-1.5">
                 <Users className="w-3.5 h-3.5 text-yellow-400" />
                 <span>Watch-Party Size</span>
               </span>
-              <span className="font-mono text-yellow-400">1 - 10,000 Guests</span>
+              <span className="font-mono text-yellow-400 font-bold">1 - 10,000 Guests</span>
             </label>
             <input
               type="number"
@@ -272,18 +274,22 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
               max={10000}
               value={groupSize}
               onChange={e => setGroupSize(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-astral-card border border-astral-border text-white text-lg font-mono font-bold focus:outline-none focus:border-yellow-400 transition-all"
+              className="w-full px-4 py-3.5 rounded-2xl cinematic-input text-lg font-mono font-bold"
             />
           </div>
 
-          {/* Quick Buttons */}
+          {/* Quick Preset Buttons */}
           <div className="grid grid-cols-5 gap-1.5">
             {[6, 11, 44, 100, 500].map(amt => (
               <button
                 key={amt}
                 type="button"
                 onClick={() => setGroupSize(amt)}
-                className="py-1.5 text-xs rounded-lg bg-[#080D1C] hover:bg-white/10 text-slate-300 border border-white/10 font-mono transition-colors"
+                className={`py-2 text-xs rounded-xl border font-mono font-semibold transition-all ${
+                  groupSize === amt
+                    ? 'bg-yellow-400 text-black border-yellow-400 shadow-glow-gold'
+                    : 'bg-[#080D1C] hover:bg-white/10 text-slate-300 border-white/10'
+                }`}
               >
                 {amt}
               </button>
@@ -294,7 +300,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
           <button
             onClick={() => handleCalculate()}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 hover:brightness-110 text-black font-extrabold text-sm uppercase tracking-wider shadow-glow-gold transition-all flex items-center justify-center space-x-2"
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-600 hover:brightness-110 text-black font-extrabold text-sm uppercase tracking-wider shadow-glow-gold transition-all flex items-center justify-center space-x-2 transform active:scale-98"
           >
             {loading ? (
               <span>Running Solver...</span>
@@ -425,7 +431,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
         </div>
       </div>
 
-      {/* Add Cinema Venue Modal */}
+      {/* Add Cinema Venue Modal with Upgraded Field Area CSS */}
       {isAddCinemaOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
           <div className="relative w-full max-w-md bg-astral-surface border border-white/10 rounded-3xl shadow-cinematic p-6 sm:p-8 space-y-5">
@@ -438,8 +444,8 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
             )}
 
             <form onSubmit={handleCreateCinema} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5 font-bold">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 font-bold">
                   Cinema Name
                 </label>
                 <input
@@ -448,12 +454,12 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                   placeholder="e.g. Stark Cinema Lounge"
                   value={newCinemaName}
                   onChange={e => setNewCinemaName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-astral-card border border-astral-border text-white text-sm focus:outline-none focus:border-yellow-400 font-sans"
+                  className="w-full px-4 py-3 rounded-xl cinematic-input text-sm font-sans"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5 font-bold">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 font-bold">
                   Bundle Sizes (comma-separated, 1-500)
                 </label>
                 <input
@@ -462,7 +468,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                   placeholder="e.g. 5, 10, 25"
                   value={newCinemaBundles}
                   onChange={e => setNewCinemaBundles(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-astral-card border border-astral-border text-white text-sm focus:outline-none focus:border-yellow-400 font-mono"
+                  className="w-full px-4 py-3 rounded-xl cinematic-input text-sm font-mono"
                 />
               </div>
 

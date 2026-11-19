@@ -13,10 +13,12 @@ import {
   Clapperboard,
   Film,
   Flame,
+  Tv,
 } from 'lucide-react';
 import { Movie, MovieCreatePayload } from '../types';
 import { MovieModal } from './MovieModal';
 import { EditPrereqsModal } from './EditPrereqsModal';
+import { CinemaTVDisplay } from './CinemaTVDisplay';
 
 interface MoviesViewProps {
   movies: Movie[];
@@ -42,6 +44,7 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
   const [filterMode, setFilterMode] = useState<'all' | 'watched' | 'unwatched'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [tvSelectedMovie, setTvSelectedMovie] = useState<Movie | null>(null);
 
   // Thematic styling per MCU film
   const getMovieTheme = (title: string) => {
@@ -204,35 +207,58 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
         </div>
       </div>
 
-      {/* Search & Filter Toolbar */}
+      {/* FEATURED: IMAX THEATER TV SCREEN DISPLAY */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center space-x-2">
+            <Tv className="w-5 h-5 text-emerald-400" />
+            <h2 className="font-cinematic text-2xl text-white tracking-wide uppercase">
+              Theatrical IMAX 8K Display
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-slate-400 bg-astral-surface px-3 py-1 rounded-full border border-astral-border">
+            Click any movie card to project on screen
+          </span>
+        </div>
+
+        <CinemaTVDisplay
+          movies={movies}
+          selectedMovie={tvSelectedMovie}
+          onSelectMovie={m => setTvSelectedMovie(m)}
+          onToggleWatched={onToggleWatched}
+          onViewPlan={onViewPlanForMovie}
+        />
+      </div>
+
+      {/* Search & Filter Toolbar with Upgraded Cinematic Fields */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        {/* Search Input */}
+        {/* Search Input Area */}
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-emerald-400 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search premiere title or year..."
+            placeholder="Search premiere title, timeline year..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-astral-surface border border-astral-border text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all font-sans"
+            className="w-full pl-11 pr-4 py-3.5 rounded-2xl cinematic-input text-sm placeholder-slate-400 font-sans tracking-wide"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center space-x-1.5 p-1 rounded-2xl bg-astral-surface border border-astral-border self-start sm:self-auto overflow-x-auto shadow-inner">
+        <div className="flex items-center space-x-1.5 p-1.5 rounded-2xl bg-astral-surface border border-astral-border self-start sm:self-auto overflow-x-auto shadow-inner">
           <button
             onClick={() => setFilterMode('all')}
-            className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
               filterMode === 'all'
                 ? 'bg-white/15 text-white font-bold shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            All ({movies.length})
+            All Vault ({movies.length})
           </button>
           <button
             onClick={() => setFilterMode('unwatched')}
-            className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
               filterMode === 'unwatched'
                 ? 'bg-gradient-to-r from-red-600 to-red-800 text-white font-bold shadow-glow-red'
                 : 'text-slate-400 hover:text-white'
@@ -242,7 +268,7 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
           </button>
           <button
             onClick={() => setFilterMode('watched')}
-            className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
               filterMode === 'watched'
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold shadow-glow-doom'
                 : 'text-slate-400 hover:text-white'
@@ -271,11 +297,15 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
           {filteredMovies.map(movie => {
             const theme = getMovieTheme(movie.title);
+            const isProjected = tvSelectedMovie?.id === movie.id;
             return (
               <div
                 key={movie.id}
-                className={`group relative flex flex-col justify-between rounded-3xl p-5 sm:p-6 border transition-all duration-300 bg-gradient-to-b ${theme.gradient} ${
-                  movie.watched
+                onClick={() => setTvSelectedMovie(movie)}
+                className={`group relative flex flex-col justify-between rounded-3xl p-5 sm:p-6 border cursor-pointer transition-all duration-300 bg-gradient-to-b ${theme.gradient} ${
+                  isProjected
+                    ? 'border-emerald-400 ring-2 ring-emerald-400/50 shadow-glow-doom scale-[1.02]'
+                    : movie.watched
                     ? 'border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.12)]'
                     : `border-astral-border ${theme.accentBorder} ${theme.glow}`
                 } hover:-translate-y-1.5`}
@@ -307,7 +337,10 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
                   {/* Watched Toggle Button */}
                   <div className="mt-4 pt-3 border-t border-white/10">
                     <button
-                      onClick={() => onToggleWatched(movie)}
+                      onClick={e => {
+                        e.stopPropagation();
+                        onToggleWatched(movie);
+                      }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all ${
                         movie.watched
                           ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
@@ -364,7 +397,10 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
                 {/* Card Action Footer */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10 gap-2">
                   <button
-                    onClick={() => onViewPlanForMovie(movie.id)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      onViewPlanForMovie(movie.id);
+                    }}
                     className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500 hover:to-teal-600 hover:text-black border border-emerald-500/30 text-xs font-bold text-emerald-300 transition-all flex items-center justify-center space-x-1.5 uppercase font-mono tracking-wider shadow-sm"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
@@ -372,7 +408,10 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
                   </button>
 
                   <button
-                    onClick={() => setEditingMovie(movie)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setEditingMovie(movie);
+                    }}
                     className="py-2 px-3 rounded-xl bg-[#080D1C] hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 transition-colors flex items-center space-x-1 font-mono"
                     title="Configure Prerequisites"
                   >
@@ -381,7 +420,10 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
                   </button>
 
                   <button
-                    onClick={() => onDeleteMovie(movie.id)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      onDeleteMovie(movie.id);
+                    }}
                     className="p-2 rounded-xl bg-[#080D1C] hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-white/10 transition-colors"
                     title="Delete Movie"
                   >

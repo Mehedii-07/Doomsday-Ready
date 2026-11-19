@@ -44,27 +44,118 @@
 
 .glass-panel-interactive:hover {
   background: linear-gradient(135deg, rgba(26, 38, 77, 0.8) 0%, rgba(15, 23, 46, 0.9) 100%);
-  border-color: rgba(0, 229, 255, 0.35);
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(16, 185, 129, 0.2);
   transform: translateY(-4px);
 }
 
-/* Regal Latveria Emerald Glow Border */
-.glow-emerald-border {
-  border-color: rgba(16, 185, 129, 0.55);
-  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+/* =========================================================================
+   CINEMATIC FIELD AREA & INPUT STYLING
+   ========================================================================= */
+.cinematic-input {
+  background: linear-gradient(135deg, rgba(12, 18, 38, 0.9) 0%, rgba(7, 11, 24, 0.95) 100%);
+  border: 1.5px solid rgba(44, 62, 117, 0.6);
+  color: #F8FAFC;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 0 0 transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Multiverse Violet Glow Border */
-.glow-violet-border {
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
+.cinematic-input:hover {
+  border-color: rgba(0, 229, 255, 0.45);
+  background: linear-gradient(135deg, rgba(15, 23, 48, 0.95) 0%, rgba(9, 14, 30, 0.98) 100%);
 }
 
-/* Arc Reactor Cyan Glow Border */
-.glow-cyan-border {
-  border-color: rgba(0, 229, 255, 0.55);
-  box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
+.cinematic-input:focus {
+  outline: none;
+  border-color: #10B981;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+    0 0 0 3px rgba(16, 185, 129, 0.25),
+    0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.cinematic-select {
+  background: linear-gradient(135deg, rgba(12, 18, 38, 0.92) 0%, rgba(7, 11, 24, 0.98) 100%);
+  border: 1.5px solid rgba(44, 62, 117, 0.6);
+  color: #F8FAFC;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cinematic-select:hover {
+  border-color: rgba(0, 229, 255, 0.5);
+}
+
+.cinematic-select:focus {
+  outline: none;
+  border-color: #00E5FF;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+    0 0 0 3px rgba(0, 229, 255, 0.2),
+    0 0 20px rgba(0, 229, 255, 0.25);
+}
+
+/* =========================================================================
+   CINEMATIC TV / THEATER DISPLAY STYLING
+   ========================================================================= */
+.cinematic-tv-frame {
+  position: relative;
+  background: linear-gradient(180deg, #1A2238 0%, #0C101F 50%, #060812 100%);
+  border-radius: 28px;
+  padding: 14px;
+  box-shadow: 
+    0 30px 80px -15px rgba(0, 0, 0, 0.9),
+    0 0 50px rgba(16, 185, 129, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Ambilight wall glow behind TV */
+.tv-ambilight {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.28) 0%, rgba(0, 229, 255, 0.2) 40%, transparent 75%);
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 40px;
+  animation: pulse 6s ease-in-out infinite;
+}
+
+.cinematic-screen {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #04060C;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle CRT / Film Grain Scanlines */
+.cinematic-screen::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Glass Screen Glare Reflection */
+.cinematic-screen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* Smooth custom scrollbars */

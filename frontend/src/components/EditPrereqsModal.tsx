@@ -121,14 +121,14 @@ export const EditPrereqsModal: React.FC<EditPrereqsModalProps> = ({
             </div>
           )}
 
-          <div className="text-xs font-mono text-slate-300 bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+          <div className="text-xs font-mono text-slate-300 bg-[#080D1C] p-3.5 rounded-2xl border border-white/10 flex items-center justify-between shadow-inner">
             <span>
-              Configured Prerequisites: <strong className="text-mcu-cyan font-bold">{selectedIds.length}</strong>
+              Configured Prerequisites: <strong className="text-emerald-400 font-bold">{selectedIds.length}</strong>
             </span>
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="text-slate-400 hover:text-white underline text-[11px]"
+              className="text-slate-400 hover:text-white underline text-[11px] font-mono"
             >
               Clear All
             </button>

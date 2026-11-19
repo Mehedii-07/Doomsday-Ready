@@ -117,17 +117,17 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
 
           {/* Premiere Target Dropdown */}
           <div className="w-full lg:w-80 flex-shrink-0 bg-[#090E20]/90 p-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
-            <label className="block text-xs font-mono uppercase tracking-widest text-slate-400 mb-1.5 flex items-center space-x-1.5 font-bold">
+            <label className="block text-xs font-mono uppercase tracking-widest text-slate-300 mb-1.5 flex items-center space-x-1.5 font-bold">
               <Clapperboard className="w-3.5 h-3.5 text-cyan-400" />
               <span>Target Premiere</span>
             </label>
             <select
               value={selectedMovieId || ''}
               onChange={e => onSelectMovieId(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-astral-surface border border-astral-border text-white text-sm font-semibold focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all font-sans"
+              className="w-full px-4 py-3 rounded-xl cinematic-select text-sm font-semibold tracking-wide font-sans"
             >
               {movies.map(m => (
-                <option key={m.id} value={m.id}>
+                <option key={m.id} value={m.id} className="bg-[#090E20] text-white">
                   {m.title} ({m.release_year})
                 </option>
               ))}
