@@ -240,12 +240,17 @@ def get_rewatch_order(movie_id: int, db: Session = Depends(get_db)):
 
     total_count = len(ordered_movies)
     watched_count = sum(1 for m in ordered_movies if m.watched)
+    unwatched_count = total_count - watched_count
     remaining_runtime = sum(m.runtime for m in ordered_movies if not m.watched)
+    total_runtime = sum(m.runtime for m in ordered_movies)
 
     return RewatchOrderResponse(
         target_movie=MoviePrerequisiteBrief(id=target_movie.id, title=target_movie.title),
         rewatch_order=ordered_movies,
         total_count=total_count,
         watched_count=watched_count,
-        remaining_runtime=remaining_runtime
+        unwatched_count=unwatched_count,
+        remaining_runtime=remaining_runtime,
+        unwatched_runtime=remaining_runtime,
+        total_runtime=total_runtime,
     )

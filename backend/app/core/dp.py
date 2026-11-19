@@ -83,10 +83,15 @@ def solve_bundle_booking(group_size: int, bundle_sizes: list[int]) -> dict[str, 
         for k in sorted(breakdown_counts.keys(), key=lambda x: int(x), reverse=True)
     }
 
+    total_bundles = int(dp[group_size])
+    breakdown_text = ", ".join(f"{size} × {count}" for size, count in sorted_breakdown.items())
+    expected_result_str = f"{total_bundles} bundle{'s' if total_bundles != 1 else ''}: {breakdown_text}"
+
     return {
         "possible": True,
-        "message": f"Optimal bundle allocation found: {int(dp[group_size])} bundle(s)",
+        "message": expected_result_str,
+        "summary": expected_result_str,
         "group_size": group_size,
-        "total_bundles": int(dp[group_size]),
+        "total_bundles": total_bundles,
         "breakdown": sorted_breakdown,
     }

@@ -27,7 +27,13 @@ def test_booking_grand_premiere_hall_44(client: TestClient):
     assert data["possible"] is True
     assert data["total_bundles"] == 4
     assert data["breakdown"] == {"20": 1, "9": 2, "6": 1}
+    assert data["message"] == "4 bundles: 20 × 1, 9 × 2, 6 × 1"
     assert data["group_size"] == 44
+
+    # Also test snake_case query parameter alias ?group_size=44
+    res2 = client.get(f"/api/cinemas/{grand_premiere['id']}/booking?group_size=44")
+    assert res2.status_code == 200
+    assert res2.json()["total_bundles"] == 4
 
 
 def test_booking_starplex_imax_6(client: TestClient):

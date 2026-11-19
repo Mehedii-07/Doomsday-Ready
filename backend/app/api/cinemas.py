@@ -47,9 +47,17 @@ def get_cinema(cinema_id: int, db: Session = Depends(get_db)):
 @router.get("/{cinema_id}/booking", response_model=BookingResponse)
 def get_cinema_booking(
     cinema_id: int,
-    group_size: int = Query(..., alias="groupSize", ge=1, le=10000, description="Watch-party group size (1-10000)"),
+    groupSize: int | None = Query(None, ge=1, le=10000, description="Watch-party group size (1-10000)"),
+    group_size: int | None = Query(None, ge=1, le=10000, description="Watch-party group size (1-10000)"),
     db: Session = Depends(get_db)
 ):
+    actual_size = groupSize if groupSize is not None else group_size
+    if actual_size is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Missing required query parameter: groupSize (1-10000)"
+        )
+
     cinema = db.query(Cinema).filter(Cinema.id == cinema_id).first()
     if not cinema:
         raise HTTPException(
@@ -57,14 +65,15 @@ def get_cinema_booking(
             detail=f"Cinema with ID {cinema_id} not found"
         )
 
-    result = solve_bundle_booking(group_size=group_size, bundle_sizes=cinema.bundle_sizes)
+    result = solve_bundle_booking(group_size=actual_size, bundle_sizes=cinema.bundle_sizes)
 
     return BookingResponse(
         possible=result["possible"],
         message=result["message"],
+        summary=result.get("summary"),
         cinema_id=cinema.id,
         cinema_name=cinema.name,
-        group_size=group_size,
+        group_size=actual_size,
         total_bundles=result["total_bundles"],
         breakdown=result["breakdown"],
         bundle_sizes=cinema.bundle_sizes

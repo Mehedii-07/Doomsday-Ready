@@ -26,7 +26,9 @@ def test_rewatch_order_doomsday(client: TestClient):
     assert data["target_movie"]["title"] == "Avengers: Doomsday"
     assert data["total_count"] == 7
     assert data["watched_count"] == 0
+    assert data["unwatched_count"] == 7
     assert data["remaining_runtime"] > 0
+    assert data["unwatched_runtime"] == data["remaining_runtime"]
 
     order_titles = [m["title"] for m in data["rewatch_order"]]
     assert len(order_titles) == 7

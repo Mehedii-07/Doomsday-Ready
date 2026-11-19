@@ -41,7 +41,10 @@ class RewatchOrderResponse(BaseModel):
     rewatch_order: list[MovieResponse]
     total_count: int
     watched_count: int
+    unwatched_count: int = 0
     remaining_runtime: int
+    unwatched_runtime: int = 0
+    total_runtime: int = 0
 
 
 class CinemaBase(BaseModel):
@@ -74,6 +77,7 @@ class CinemaResponse(CinemaBase):
 class BookingResponse(BaseModel):
     possible: bool
     message: str
+    summary: Optional[str] = None
     cinema_id: Optional[int] = None
     cinema_name: Optional[str] = None
     group_size: Optional[int] = None
