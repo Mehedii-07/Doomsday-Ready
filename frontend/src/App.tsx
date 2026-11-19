@@ -77,7 +77,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#05060A] text-slate-100 flex flex-col font-sans selection:bg-mcu-red selection:text-white pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#070A14] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black pb-20 md:pb-0">
       {/* Top Cinematic Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -118,13 +118,13 @@ export const App: React.FC = () => {
       </main>
 
       {/* Mobile Bottom Navigation Bar (Thumb-friendly for iPhone / Android) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#080B15]/95 backdrop-blur-xl border-t border-white/10 px-4 py-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#080D1C]/95 backdrop-blur-2xl border-t border-white/10 px-4 py-2 shadow-2xl">
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => { setActiveTab('movies'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition-all ${
               activeTab === 'movies'
-                ? 'bg-mcu-red text-white shadow-glow-red font-bold'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-700 text-white shadow-glow-doom font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -134,9 +134,9 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => { setActiveTab('plan'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition-all ${
               activeTab === 'plan'
-                ? 'bg-mcu-cyan text-black shadow-glow-cyan font-bold'
+                ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-glow-cyan font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -146,9 +146,9 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => { setActiveTab('booking'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition-all ${
               activeTab === 'booking'
-                ? 'bg-mcu-gold text-black shadow-glow-gold font-bold'
+                ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-black shadow-glow-gold font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -159,18 +159,18 @@ export const App: React.FC = () => {
       </div>
 
       {/* Cinematic Footer */}
-      <footer className="border-t border-white/10 py-8 px-4 text-center bg-[#030407] text-xs text-slate-500 space-y-2">
-        <div className="flex items-center justify-center space-x-2">
-          <span className="font-cinematic text-lg tracking-widest text-slate-300">
-            DOOMSDAY <span className="text-mcu-red">READY</span>
+      <footer className="border-t border-astral-border/70 py-10 px-4 text-center bg-[#050811] text-xs text-slate-500 space-y-2.5">
+        <div className="flex items-center justify-center space-x-2.5">
+          <span className="font-cinematic text-xl tracking-widest text-slate-200">
+            DOOMSDAY <span className="text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">READY</span>
           </span>
           <span className="text-slate-600">&bull;</span>
-          <span className="text-[11px] font-mono uppercase text-slate-400">
+          <span className="text-[11px] font-mono uppercase text-slate-400 tracking-wider">
             BLINTO TALENT ACCELERATOR 2027
           </span>
         </div>
-        <p className="text-[11px] text-slate-500 font-mono max-w-xl mx-auto">
-          Production Architecture: FastAPI &bull; PostgreSQL &bull; React 18+ TypeScript &bull; Tailwind CSS &bull; Docker Compose
+        <p className="text-[11px] text-slate-400 font-mono max-w-xl mx-auto">
+          Architectural Foundation: FastAPI &bull; PostgreSQL 18 &bull; React 18+ TypeScript &bull; Tailwind CSS &bull; Docker Compose
         </p>
       </footer>
     </div>
