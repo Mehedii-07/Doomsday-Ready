@@ -259,6 +259,7 @@ $env:PYTHONPATH="backend"; .\.venv\Scripts\pytest backend\tests -v
 | `POST` | `/api/cinemas` | Create cinema venue with name and bundle sizes (1-10 sizes) | `201`, `409`, `422` |
 | `GET` | `/api/cinemas` | List all cinema venues | `200` |
 | `GET` | `/api/cinemas/{id}/booking` | Compute minimum bundles for `groupSize` via DP | `200`, `404`, `422` |
+| `POST` | `/api/reset` | Restore database to pristine canonical MCU assessment seed state | `200` |
 | `GET` | `/api/health` | Health check endpoint | `200` |
 
 ---
@@ -267,20 +268,21 @@ $env:PYTHONPATH="backend"; .\.venv\Scripts\pytest backend\tests -v
 
 The user interface uses a custom **Marvel Cinematic Universe (MCU) dark aesthetic** featuring deep obsidian cards, electric cyan glows, Arc Reactor badges, and high-contrast typography.
 
-1. **Movies View:**
-   - Interactive movie catalog displaying titles, release years, runtimes, and prerequisite tags.
-   - Live checkbox to toggle `watched` status with immediate persistence.
-   - Form modal to add new movies with prerequisite selection.
-   - Dedicated **Edit Prerequisites Modal** equipped with real-time error interception: if an edit creates a loop, an animated `409 CIRCULAR_DEPENDENCY` alert banner is displayed immediately.
-2. **Rewatch Plan View:**
-   - Dropdown defaulting to *Avengers: Doomsday* (2026).
-   - Visual progress bar tracking watched prerequisites percentage.
-   - Remaining runtime display formatted as `X mins (Y hrs Z mins)`.
-   - Numbered step-by-step prerequisite list with interactive checkboxes that immediately update progress and remaining time.
-3. **Cinema Booking View:**
-   - Venue selector highlighting available bundle sizes.
-   - Group size input ($1 \le N \le 10,000$) with quick assessment preset buttons (`Grand Premiere 44`, `Starplex 6`, `Metro 11`, `Indie 7`).
-   - Dynamic Programming results card displaying total bundles, individual bundle breakdown multipliers (e.g., $20 \times 1, 9 \times 2, 6 \times 1$), and mathematical seat verification equations.
+1. **Movies View & Theatrical IMAX Display:**
+   - **Theatrical IMAX 8K Display & Ambilight HUD:** Top-mounted cinematic screen preview featuring dynamic Ambilight backlighting that adapts to the saga and color palette of whichever movie is selected.
+   - **Interactive Movie Catalog:** Displays titles, release years, runtimes, and prerequisite tags.
+   - **Multi-Criteria Sorting:** Sort movies by Canonical MCU Order, Release Year (Newest), Title (A-Z), or Runtime (Longest/Shortest).
+   - **Canonical Reset Action:** A dedicated "Reset Canon" button restores the entire database back to the canonical MCU test dataset at any time.
+   - **Real-Time Cycle Prevention:** Form modal and dedicated **Edit Prerequisites Modal** with real-time error interception: if an edit creates a loop, an animated `409 CIRCULAR_DEPENDENCY` alert banner is displayed immediately.
+2. **Rewatch Plan View & Doomsday Premiere Countdown:**
+   - **Live Countdown Clock:** Real-time HUD ticking down days, hours, minutes, and seconds to the *Avengers: Doomsday* premiere (May 1, 2026).
+   - **Visual Progress Bar:** Real-time percentage indicator and runtime tracker formatted as `X mins (Y hrs Z mins)`.
+   - **Roadmap Batch Controls:** Instant "Mark All Watched" and "Reset Progress" buttons to update the entire roadmap with a single click.
+   - **"Unwatched Only" Filter:** Toggle to focus strictly on remaining uncompleted milestones.
+3. **Cinema Booking View & Auditorium Seating Visualizer:**
+   - **Interactive Auditorium Seating Chart:** Realistic curved IMAX 8K Laser screen representation with color-coded armchair clusters for each allocated bundle tier.
+   - **Group Size Input:** Accommodates parties up to 10,000 guests with instant benchmark presets (`Grand Premiere 44`, `Starplex 6`, `Metro 11`, `Indie 7`).
+   - **Dynamic Programming Results:** Total bundle tally, individual bundle breakdowns, and seat verification formulas confirming zero empty seats.
 
 ---
 

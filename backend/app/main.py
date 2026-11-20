@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import engine, Base, SessionLocal
+from app.database import engine, Base, SessionLocal, get_db
 from app.seed import seed_database
 from app.api.movies import router as movies_router, CircularDependencyException
 from app.api.cinemas import router as cinemas_router
@@ -57,3 +58,10 @@ app.include_router(cinemas_router, prefix="/api")
 @app.get("/api/health", tags=["Health"])
 def health_check():
     return {"status": "healthy", "service": "Doomsday Ready API", "version": settings.VERSION}
+
+
+@app.post("/api/reset", tags=["Admin"])
+def reset_canonical_dataset(db: Session = Depends(get_db)):
+    """Restores database to the pristine canonical MCU seed state."""
+    seed_database(db, force=True)
+    return {"status": "success", "message": "Database reset to canonical MCU assessment state"}

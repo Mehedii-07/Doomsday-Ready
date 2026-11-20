@@ -2,8 +2,14 @@ from sqlalchemy.orm import Session
 from app.models import Movie, Cinema, movie_prerequisites
 
 
-def seed_database(db: Session) -> None:
-    """Seeds the initial MCU movie dataset and cinema venues if the database is empty."""
+def seed_database(db: Session, force: bool = False) -> None:
+    """Seeds the initial MCU movie dataset and cinema venues if the database is empty or if force=True."""
+    if force:
+        db.execute(movie_prerequisites.delete())
+        db.query(Movie).delete()
+        db.query(Cinema).delete()
+        db.commit()
+
     # Seed Movies if table is empty
     if db.query(Movie).count() == 0:
         movies_data = [

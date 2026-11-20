@@ -147,3 +147,20 @@ def test_create_movie_validations(client: TestClient):
         json={"title": "Brand New Movie", "release_year": 2025, "runtime": 120, "prerequisite_ids": [99999]}
     )
     assert res.status_code == 404
+
+
+def test_reset_canonical_dataset(client: TestClient):
+    """POST /api/reset resets database back to 8 movies and 4 cinemas."""
+    # Create a dummy movie
+    client.post("/api/movies", json={"title": "Extra Movie", "release_year": 2025, "runtime": 100})
+    assert len(client.get("/api/movies").json()) == 9
+
+    # Trigger reset
+    res = client.post("/api/reset")
+    assert res.status_code == 200
+    assert res.json()["status"] == "success"
+
+    # Confirm restored to 8 canonical movies
+    movies = client.get("/api/movies").json()
+    assert len(movies) == 8
+    assert "Extra Movie" not in [m["title"] for m in movies]

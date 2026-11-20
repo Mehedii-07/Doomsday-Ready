@@ -405,6 +405,85 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                   = {bookingResult.group_size} Seats (Exact Match)
                 </span>
               </div>
+
+              {/* INTERACTIVE AUDITORIUM SEATING MAP */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase font-mono font-bold tracking-widest text-slate-300 flex items-center space-x-2">
+                    <Sparkles className="w-4 h-4 text-yellow-400" />
+                    <span>Theatrical Auditorium Seating Chart</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    {bookingResult.group_size} Reserved Seats &bull; 0 Empty
+                  </span>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-[#060913] border border-white/10 shadow-inner space-y-6">
+                  {/* Curved IMAX Screen Graphic */}
+                  <div className="relative text-center pb-2">
+                    <div className="w-full max-w-md mx-auto h-7 rounded-t-[100px] border-t-4 border-cyan-400 bg-gradient-to-b from-cyan-400/25 to-transparent flex items-center justify-center shadow-[0_-8px_20px_rgba(34,211,238,0.35)]">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-cyan-200 font-extrabold">
+                        CURVED IMAX 8K LASER SCREEN
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Seat Clusters by Bundle Breakdown */}
+                  <div className="space-y-4">
+                    {bookingResult.breakdown &&
+                      Object.entries(bookingResult.breakdown).map(([sizeStr, count], bIdx) => {
+                        const size = Number(sizeStr);
+                        const palette = [
+                          { border: 'border-yellow-400/70', bg: 'bg-yellow-400/15', text: 'text-yellow-300', dot: 'bg-yellow-400', badge: 'bg-yellow-500/20 text-yellow-300' },
+                          { border: 'border-emerald-400/70', bg: 'bg-emerald-400/15', text: 'text-emerald-300', dot: 'bg-emerald-400', badge: 'bg-emerald-500/20 text-emerald-300' },
+                          { border: 'border-cyan-400/70', bg: 'bg-cyan-400/15', text: 'text-cyan-300', dot: 'bg-cyan-400', badge: 'bg-cyan-500/20 text-cyan-300' },
+                          { border: 'border-violet-400/70', bg: 'bg-violet-400/15', text: 'text-violet-300', dot: 'bg-violet-400', badge: 'bg-violet-500/20 text-violet-300' },
+                        ][bIdx % 4];
+
+                        return (
+                          <div key={sizeStr} className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="flex items-center space-x-2">
+                                <span className={`w-2.5 h-2.5 rounded-full ${palette.dot} shadow-sm`} />
+                                <span className="font-bold text-slate-200">
+                                  Bundle Tier {bIdx + 1}: {count} &times; ({size}-Seat Pack)
+                                </span>
+                              </span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${palette.badge}`}>
+                                {size * count} Total Seats
+                              </span>
+                            </div>
+
+                            {/* Render Individual Seats for this Bundle Tier (up to 100 max per tier for visual clarity) */}
+                            <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-[#090E20]/60 border border-white/5">
+                              {Array.from({ length: Math.min(size * count, 120) }).map((_, seatIdx) => (
+                                <div
+                                  key={seatIdx}
+                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-t-lg rounded-b-xs border ${palette.border} ${palette.bg} flex items-center justify-center text-[10px] font-mono font-bold ${palette.text} transition-transform hover:scale-125 cursor-pointer shadow-sm`}
+                                  title={`Bundle ${size}-seat pack: Seat #${seatIdx + 1}`}
+                                >
+                                  {seatIdx + 1}
+                                </div>
+                              ))}
+                              {size * count > 120 && (
+                                <div className="flex items-center px-2 text-xs font-mono text-slate-400">
+                                  + {size * count - 120} more reserved seats
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Auditorium Exit / Aisle Guidance */}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px] font-mono text-slate-400">
+                    <span>&larr; WEST AISLE / EXIT</span>
+                    <span className="uppercase text-slate-500">Center Auditorium Row</span>
+                    <span>EAST AISLE / EXIT &rarr;</span>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             /* Impossible Result Card */

@@ -75,6 +75,10 @@ export const api = {
   getBooking: (cinemaId: number, groupSize: number) =>
     request<BookingResult>(`/cinemas/${cinemaId}/booking?groupSize=${groupSize}`),
 
-  // Health
+  // Health & Admin
   checkHealth: () => request<{ status: string }>('/health'),
+  resetDatabase: () =>
+    request<{ status: string; message: string }>('/reset', {
+      method: 'POST',
+    }),
 };

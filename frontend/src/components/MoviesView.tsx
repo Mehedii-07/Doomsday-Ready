@@ -14,11 +14,15 @@ import {
   Film,
   Flame,
   Tv,
+  RotateCcw,
+  ArrowUpDown,
+  Check,
 } from 'lucide-react';
 import { Movie, MovieCreatePayload } from '../types';
 import { MovieModal } from './MovieModal';
 import { EditPrereqsModal } from './EditPrereqsModal';
 import { CinemaTVDisplay } from './CinemaTVDisplay';
+import { api } from '../services/api';
 
 interface MoviesViewProps {
   movies: Movie[];
@@ -34,6 +38,7 @@ interface MoviesViewProps {
 export const MoviesView: React.FC<MoviesViewProps> = ({
   movies,
   loading,
+  onRefresh,
   onCreateMovie,
   onToggleWatched,
   onUpdatePrerequisites,
@@ -42,6 +47,9 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'watched' | 'unwatched'>('all');
+  const [sortBy, setSortBy] = useState<'chronological' | 'year-desc' | 'title' | 'runtime-desc' | 'runtime-asc'>('chronological');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [tvSelectedMovie, setTvSelectedMovie] = useState<Movie | null>(null);
@@ -109,12 +117,55 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
     };
   };
 
+  const handleResetToCanonical = async () => {
+    if (
+      !window.confirm(
+        'Reset database back to the canonical Marvel Cinematic Universe dataset? Custom additions will be reset to default.'
+      )
+    ) {
+      return;
+    }
+    try {
+      setIsResetting(true);
+      setResetSuccessMessage(null);
+      await api.resetDatabase();
+      await onRefresh();
+      setResetSuccessMessage('Restored to Canonical MCU Assessment State!');
+      setTimeout(() => setResetSuccessMessage(null), 4000);
+    } catch (err: any) {
+      alert(err?.data?.detail || err?.message || 'Failed to reset database');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const filteredMovies = movies.filter(m => {
     const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
     if (filterMode === 'watched') return m.watched;
     if (filterMode === 'unwatched') return !m.watched;
     return true;
+  });
+
+  const sortedMovies = [...filteredMovies].sort((a, b) => {
+    if (sortBy === 'chronological') {
+      if (a.release_year !== b.release_year) return a.release_year - b.release_year;
+      return a.id - b.id;
+    }
+    if (sortBy === 'year-desc') {
+      if (a.release_year !== b.release_year) return b.release_year - a.release_year;
+      return b.id - a.id;
+    }
+    if (sortBy === 'title') {
+      return a.title.localeCompare(b.title);
+    }
+    if (sortBy === 'runtime-desc') {
+      return b.runtime - a.runtime;
+    }
+    if (sortBy === 'runtime-asc') {
+      return a.runtime - b.runtime;
+    }
+    return 0;
   });
 
   const watchedCount = movies.filter(m => m.watched).length;
@@ -151,17 +202,35 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
             </p>
           </div>
 
-          {/* Quick Action Button */}
-          <div className="flex-shrink-0 flex items-center">
+          {/* Quick Action Buttons */}
+          <div className="flex-shrink-0 flex items-center flex-wrap gap-3">
+            <button
+              onClick={handleResetToCanonical}
+              disabled={isResetting}
+              className="flex items-center space-x-2 px-4 py-3.5 rounded-2xl bg-[#090E20]/90 hover:bg-white/10 text-slate-300 hover:text-white border border-white/15 text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-sm"
+              title="Reset database back to the canonical MCU assessment state"
+            >
+              <RotateCcw className={`w-4 h-4 text-emerald-400 ${isResetting ? 'animate-spin' : ''}`} />
+              <span>{isResetting ? 'Restoring...' : 'Reset Canon'}</span>
+            </button>
+
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-700 hover:brightness-110 text-white font-extrabold text-sm tracking-wider uppercase shadow-glow-doom transition-all transform hover:-translate-y-1 active:translate-y-0"
+              className="flex items-center justify-center space-x-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-700 hover:brightness-110 text-white font-extrabold text-sm tracking-wider uppercase shadow-glow-doom transition-all transform hover:-translate-y-1 active:translate-y-0"
             >
               <Plus className="w-5 h-5 stroke-[2.5]" />
               <span>Add Premiere</span>
             </button>
           </div>
         </div>
+
+        {/* Canonical Reset Feedback Toast */}
+        {resetSuccessMessage && (
+          <div className="mt-4 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center space-x-2 animate-fadeIn shadow-glow-doom">
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span>{resetSuccessMessage}</span>
+          </div>
+        )}
 
         {/* Thematic Metric Strips */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4 mt-8 pt-8 border-t border-white/10">
@@ -230,8 +299,8 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
         />
       </div>
 
-      {/* Search & Filter Toolbar with Upgraded Cinematic Fields */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      {/* Search, Filter & Sort Toolbar with Upgraded Cinematic Fields */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Search Input Area */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-emerald-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -244,38 +313,56 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center space-x-1.5 p-1.5 rounded-2xl bg-astral-surface border border-astral-border self-start sm:self-auto overflow-x-auto shadow-inner">
-          <button
-            onClick={() => setFilterMode('all')}
-            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
-              filterMode === 'all'
-                ? 'bg-white/15 text-white font-bold shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            All Vault ({movies.length})
-          </button>
-          <button
-            onClick={() => setFilterMode('unwatched')}
-            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
-              filterMode === 'unwatched'
-                ? 'bg-gradient-to-r from-red-600 to-red-800 text-white font-bold shadow-glow-red'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            To Watch ({movies.length - watchedCount})
-          </button>
-          <button
-            onClick={() => setFilterMode('watched')}
-            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
-              filterMode === 'watched'
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold shadow-glow-doom'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Watched ({watchedCount})
-          </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Filter Pills */}
+          <div className="flex items-center space-x-1.5 p-1.5 rounded-2xl bg-astral-surface border border-astral-border overflow-x-auto shadow-inner">
+            <button
+              onClick={() => setFilterMode('all')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+                filterMode === 'all'
+                  ? 'bg-white/15 text-white font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              All Vault ({movies.length})
+            </button>
+            <button
+              onClick={() => setFilterMode('unwatched')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+                filterMode === 'unwatched'
+                  ? 'bg-gradient-to-r from-red-600 to-red-800 text-white font-bold shadow-glow-red'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              To Watch ({movies.length - watchedCount})
+            </button>
+            <button
+              onClick={() => setFilterMode('watched')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+                filterMode === 'watched'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold shadow-glow-doom'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Watched ({watchedCount})
+            </button>
+          </div>
+
+          {/* Sort Dropdown Selector */}
+          <div className="flex items-center space-x-2 bg-astral-surface border border-astral-border rounded-2xl px-3 py-1.5 shadow-inner">
+            <ArrowUpDown className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as any)}
+              className="bg-transparent text-xs font-mono font-bold text-slate-200 focus:outline-none cursor-pointer py-1 pr-2"
+            >
+              <option value="chronological" className="bg-[#090E20] text-white">Chronological (Canon)</option>
+              <option value="year-desc" className="bg-[#090E20] text-white">Release Year (Newest)</option>
+              <option value="title" className="bg-[#090E20] text-white">Title (A-Z)</option>
+              <option value="runtime-desc" className="bg-[#090E20] text-white">Runtime (Longest)</option>
+              <option value="runtime-asc" className="bg-[#090E20] text-white">Runtime (Shortest)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -285,7 +372,7 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
           <div className="w-9 h-9 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin" />
           <span className="font-mono text-sm tracking-wider uppercase text-slate-400">Loading Celestial Vault...</span>
         </div>
-      ) : filteredMovies.length === 0 ? (
+      ) : sortedMovies.length === 0 ? (
         <div className="text-center py-20 bg-astral-surface/70 rounded-3xl border border-astral-border p-6">
           <Layers className="w-14 h-14 text-slate-600 mx-auto mb-3" />
           <h3 className="text-xl font-bold text-white font-cinematic tracking-wider">No Movies Found</h3>
@@ -295,7 +382,7 @@ export const MoviesView: React.FC<MoviesViewProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-          {filteredMovies.map(movie => {
+          {sortedMovies.map(movie => {
             const theme = getMovieTheme(movie.title);
             const isProjected = tvSelectedMovie?.id === movie.id;
             return (

@@ -10,6 +10,9 @@ import {
   TrendingUp,
   Clapperboard,
   Check,
+  RotateCcw,
+  CheckCheck,
+  Filter,
 } from 'lucide-react';
 import { Movie, RewatchPlan } from '../types';
 import { api } from '../services/api';
@@ -30,7 +33,34 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
   const [plan, setPlan] = useState<RewatchPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [filterUnwatchedOnly, setFilterUnwatchedOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Live Countdown to May 1, 2026 Avengers: Doomsday premiere
+  const [countdown, setCountdown] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const premiereTime = new Date('2026-05-01T00:00:00Z').getTime();
+      const now = new Date().getTime();
+      const diff = Math.max(0, premiereTime - now);
+      setCountdown({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!selectedMovieId && movies.length > 0) {
@@ -77,6 +107,48 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
     }
   };
 
+  const handleMarkAllWatched = async () => {
+    if (!plan || plan.rewatch_order.length === 0) return;
+    const unwatched = plan.rewatch_order.filter(m => !m.watched);
+    if (unwatched.length === 0) return;
+
+    try {
+      setIsBulkUpdating(true);
+      await Promise.all(
+        unwatched.map(m => api.updateMovie(m.id, { watched: true }))
+      );
+      await onMovieWatchedToggled();
+      if (selectedMovieId) {
+        await fetchPlan(selectedMovieId);
+      }
+    } catch (err: any) {
+      console.error('Failed to mark all watched', err);
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const handleResetAllProgress = async () => {
+    if (!plan || plan.rewatch_order.length === 0) return;
+    const watched = plan.rewatch_order.filter(m => m.watched);
+    if (watched.length === 0) return;
+
+    try {
+      setIsBulkUpdating(true);
+      await Promise.all(
+        watched.map(m => api.updateMovie(m.id, { watched: false }))
+      );
+      await onMovieWatchedToggled();
+      if (selectedMovieId) {
+        await fetchPlan(selectedMovieId);
+      }
+    } catch (err: any) {
+      console.error('Failed to reset progress', err);
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const formatRuntime = (mins: number) => {
     const hrs = Math.floor(mins / 60);
     const rem = mins % 60;
@@ -90,6 +162,11 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
   const totalCount = plan?.total_count || 0;
   const watchedCount = plan?.watched_count || 0;
   const progressPct = totalCount > 0 ? Math.round((watchedCount / totalCount) * 100) : 100;
+
+  const displayMovies = plan?.rewatch_order.filter(m => {
+    if (filterUnwatchedOnly) return !m.watched;
+    return true;
+  }) || [];
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn">
@@ -115,23 +192,48 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
             </p>
           </div>
 
-          {/* Premiere Target Dropdown */}
-          <div className="w-full lg:w-80 flex-shrink-0 bg-[#090E20]/90 p-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
-            <label className="block text-xs font-mono uppercase tracking-widest text-slate-300 mb-1.5 flex items-center space-x-1.5 font-bold">
-              <Clapperboard className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Target Premiere</span>
-            </label>
-            <select
-              value={selectedMovieId || ''}
-              onChange={e => onSelectMovieId(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl cinematic-select text-sm font-semibold tracking-wide font-sans"
-            >
-              {movies.map(m => (
-                <option key={m.id} value={m.id} className="bg-[#090E20] text-white">
-                  {m.title} ({m.release_year})
-                </option>
-              ))}
-            </select>
+          {/* Right Header: Target Dropdown & Doomsday Countdown */}
+          <div className="w-full lg:w-96 flex-shrink-0 space-y-3">
+            {/* Live Avengers: Doomsday Premiere Countdown HUD */}
+            <div className="p-3.5 rounded-2xl bg-[#090E20]/90 border border-white/10 backdrop-blur-md shadow-inner flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+                <span className="text-[11px] font-mono font-bold uppercase text-slate-300 tracking-wider">
+                  DOOMSDAY PREMIERE
+                </span>
+              </div>
+              <div className="flex items-center space-x-1.5 font-mono text-xs font-extrabold text-white">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-emerald-400">{countdown.days}d</span>
+                <span>:</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-cyan-400">{countdown.hours}h</span>
+                <span>:</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-yellow-400">{countdown.minutes}m</span>
+                <span>:</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-red-400">{countdown.seconds}s</span>
+              </div>
+            </div>
+
+            {/* Premiere Target Dropdown */}
+            <div className="bg-[#090E20]/90 p-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
+              <label className="block text-xs font-mono uppercase tracking-widest text-slate-300 mb-1.5 flex items-center space-x-1.5 font-bold">
+                <Clapperboard className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Target Premiere</span>
+              </label>
+              <select
+                value={selectedMovieId || ''}
+                onChange={e => onSelectMovieId(Number(e.target.value))}
+                className="w-full px-4 py-3 rounded-xl cinematic-select text-sm font-semibold tracking-wide font-sans"
+              >
+                {movies.map(m => (
+                  <option key={m.id} value={m.id} className="bg-[#090E20] text-white">
+                    {m.title} ({m.release_year})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -189,15 +291,54 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
 
       {/* Ordered Prerequisite Timeline List */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
           <h2 className="font-cinematic text-2xl sm:text-3xl tracking-wide text-white flex items-center space-x-2 uppercase">
             <Play className="w-5 h-5 text-emerald-400 fill-emerald-400" />
             <span>Chronological Prerequisite Sequence</span>
           </h2>
-          {plan && (
-            <span className="text-xs font-mono text-slate-400 bg-astral-surface/90 px-3 py-1 rounded-full border border-astral-border self-start sm:self-auto">
-              {plan.total_count} Transitive Steps
-            </span>
+
+          {/* Timeline Action Strip */}
+          {plan && plan.rewatch_order.length > 0 && (
+            <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+              {/* Unwatched Only Toggle */}
+              <button
+                onClick={() => setFilterUnwatchedOnly(!filterUnwatchedOnly)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all ${
+                  filterUnwatchedOnly
+                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-glow-cyan'
+                    : 'bg-astral-surface border-white/10 text-slate-400 hover:text-white'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>{filterUnwatchedOnly ? 'Showing Unwatched' : 'All Milestones'}</span>
+              </button>
+
+              {/* Mark All Watched */}
+              <button
+                onClick={handleMarkAllWatched}
+                disabled={isBulkUpdating || watchedCount === totalCount}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                title="Mark all prerequisites on this roadmap as watched"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Mark All Watched</span>
+              </button>
+
+              {/* Reset Progress */}
+              <button
+                onClick={handleResetAllProgress}
+                disabled={isBulkUpdating || watchedCount === 0}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#090E20] hover:bg-white/10 border border-white/10 text-slate-400 hover:text-slate-200 text-xs font-mono font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Reset all watched marks for this roadmap"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${isBulkUpdating ? 'animate-spin' : ''}`} />
+                <span>Reset</span>
+              </button>
+
+              <span className="text-xs font-mono text-slate-400 bg-astral-surface/90 px-3 py-1.5 rounded-xl border border-astral-border">
+                {plan.total_count} Steps
+              </span>
+            </div>
           )}
         </div>
 
@@ -219,9 +360,17 @@ export const RewatchPlanView: React.FC<RewatchPlanViewProps> = ({
               <strong>{currentMovie?.title}</strong> is a self-contained saga genesis or standalone milestone. You are ready to stream immediately!
             </p>
           </div>
+        ) : filterUnwatchedOnly && displayMovies.length === 0 ? (
+          <div className="p-10 sm:p-14 rounded-3xl bg-emerald-950/20 border border-emerald-500/30 text-center space-y-3">
+            <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+            <h3 className="font-cinematic text-3xl text-white tracking-wider">All Prerequisites Watched!</h3>
+            <p className="text-sm text-slate-300 max-w-md mx-auto font-sans">
+              You have completed every transitive prerequisite leading to <strong>{currentMovie?.title}</strong>. You are completely ready for premiere night!
+            </p>
+          </div>
         ) : (
           <div className="relative pl-6 sm:pl-8 space-y-4 before:absolute before:left-3 sm:before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-emerald-500 before:via-teal-400 before:to-cyan-400">
-            {plan.rewatch_order.map((movie, index) => {
+            {displayMovies.map((movie, index) => {
               const isToggling = togglingId === movie.id;
               return (
                 <div
