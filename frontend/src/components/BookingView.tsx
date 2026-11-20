@@ -8,6 +8,9 @@ import {
   Layers,
   Plus,
   Building,
+  Armchair,
+  Grid,
+  ShieldCheck,
 } from 'lucide-react';
 import { Cinema, BookingResult } from '../types';
 import { api } from '../services/api';
@@ -17,12 +20,24 @@ interface BookingViewProps {
   onCinemaCreated: () => Promise<void>;
 }
 
+interface SelectedSeatInfo {
+  rowLetter: string;
+  seatNum: number;
+  seatCode: string;
+  tierName: string;
+  bundleSize: number;
+  packIndex: number;
+}
+
 export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreated }) => {
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
   const [groupSize, setGroupSize] = useState<number>(44);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'auditorium' | 'tiers'>('auditorium');
+  const [selectedSeat, setSelectedSeat] = useState<SelectedSeatInfo | null>(null);
+  const [hoveredSeat, setHoveredSeat] = useState<SelectedSeatInfo | null>(null);
 
   // New Cinema Form state
   const [isAddCinemaOpen, setIsAddCinemaOpen] = useState(false);
@@ -120,6 +135,151 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
     } finally {
       setCreatingCinema(false);
     }
+  };
+
+  // Helper to resolve tier styling, color palettes, and tier titles
+  const getTierDesign = (tierIdx: number, size: number) => {
+    const designs = [
+      {
+        tierName: `VIP Grand Tier (${size}-Seat Pack)`,
+        badgeLabel: `TIER 1 • VIP GRAND`,
+        dot: 'bg-amber-400',
+        badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        text: 'text-amber-300',
+        seatBorder: 'border-amber-400/80',
+        seatBg: 'bg-gradient-to-t from-amber-950 via-amber-900/60 to-amber-700/50',
+        hoverGlow: 'hover:shadow-[0_0_15px_rgba(251,191,36,0.6)]',
+      },
+      {
+        tierName: `Premier Party Tier (${size}-Seat Pack)`,
+        badgeLabel: `TIER 2 • PREMIER POD`,
+        dot: 'bg-emerald-400',
+        badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        text: 'text-emerald-300',
+        seatBorder: 'border-emerald-400/80',
+        seatBg: 'bg-gradient-to-t from-emerald-950 via-emerald-900/60 to-emerald-700/50',
+        hoverGlow: 'hover:shadow-[0_0_15px_rgba(52,211,153,0.6)]',
+      },
+      {
+        tierName: `Squad Reserve Tier (${size}-Seat Pack)`,
+        badgeLabel: `TIER 3 • SQUAD BOOTH`,
+        dot: 'bg-cyan-400',
+        badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+        text: 'text-cyan-300',
+        seatBorder: 'border-cyan-400/80',
+        seatBg: 'bg-gradient-to-t from-cyan-950 via-cyan-900/60 to-cyan-700/50',
+        hoverGlow: 'hover:shadow-[0_0_15px_rgba(34,211,238,0.6)]',
+      },
+      {
+        tierName: `Club Reserve Tier (${size}-Seat Pack)`,
+        badgeLabel: `TIER 4 • CLUB LOUNGE`,
+        dot: 'bg-violet-400',
+        badge: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+        text: 'text-violet-300',
+        seatBorder: 'border-violet-400/80',
+        seatBg: 'bg-gradient-to-t from-violet-950 via-violet-900/60 to-violet-700/50',
+        hoverGlow: 'hover:shadow-[0_0_15px_rgba(167,139,250,0.6)]',
+      },
+    ];
+    return designs[tierIdx % designs.length];
+  };
+
+  const sortedTiers =
+    bookingResult?.possible && bookingResult.breakdown
+      ? Object.entries(bookingResult.breakdown)
+          .map(([sizeStr, count]) => ({ size: Number(sizeStr), count }))
+          .sort((a, b) => b.size - a.size)
+      : [];
+
+  const rowLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+  let packCounter = 0;
+  const bundlePacks = sortedTiers.flatMap((tier, tierIdx) => {
+    const design = getTierDesign(tierIdx, tier.size);
+    const packs = [];
+    for (let c = 0; c < tier.count; c++) {
+      const rowLetter = rowLetters[packCounter % rowLetters.length];
+      packs.push({
+        id: `pack-${packCounter}`,
+        tierIndex: tierIdx,
+        tierName: design.tierName,
+        badgeLabel: design.badgeLabel,
+        bundleSize: tier.size,
+        packNumber: c + 1,
+        totalPacksInTier: tier.count,
+        rowLetter,
+        design,
+        globalIndex: packCounter,
+      });
+      packCounter++;
+    }
+    return packs;
+  });
+
+  const activeSeat = hoveredSeat || selectedSeat;
+
+  const renderArmchair = (
+    pack: (typeof bundlePacks)[0],
+    seatNum: number,
+    compact: boolean = false
+  ) => {
+    const seatCode = `${pack.rowLetter}${seatNum}`;
+    const isSelected = selectedSeat?.seatCode === seatCode;
+    const isHovered = hoveredSeat?.seatCode === seatCode;
+
+    return (
+      <button
+        key={seatCode}
+        type="button"
+        onClick={() =>
+          setSelectedSeat({
+            rowLetter: pack.rowLetter,
+            seatNum,
+            seatCode,
+            tierName: pack.tierName,
+            bundleSize: pack.bundleSize,
+            packIndex: pack.packNumber,
+          })
+        }
+        onMouseEnter={() =>
+          setHoveredSeat({
+            rowLetter: pack.rowLetter,
+            seatNum,
+            seatCode,
+            tierName: pack.tierName,
+            bundleSize: pack.bundleSize,
+            packIndex: pack.packNumber,
+          })
+        }
+        onMouseLeave={() => setHoveredSeat(null)}
+        className={`group/seat relative flex flex-col items-center justify-between transition-all duration-150 cursor-pointer ${
+          compact ? 'w-7 h-8 sm:w-8 sm:h-9' : 'w-8 h-9 sm:w-9 sm:h-10'
+        } rounded-t-lg rounded-b-[4px] border ${
+          isSelected
+            ? `ring-2 ring-white scale-110 shadow-lg z-20 ${pack.design.seatBorder} ${pack.design.seatBg}`
+            : isHovered
+            ? `scale-110 z-10 ${pack.design.seatBorder} ${pack.design.seatBg} ${pack.design.hoverGlow}`
+            : `${pack.design.seatBorder} ${pack.design.seatBg} ${pack.design.hoverGlow} hover:scale-105`
+        }`}
+        title={`${seatCode} • ${pack.tierName} • Seat #${seatNum}`}
+      >
+        {/* Leather Headrest Cushion */}
+        <div className="w-5 sm:w-6 h-1.5 sm:h-2 mt-0.5 rounded-t-[3px] bg-white/25 border-b border-black/40 flex items-center justify-center">
+          <div className="w-2 h-0.5 rounded-full bg-white/40" />
+        </div>
+
+        {/* Seat Code designation */}
+        <span className="text-[9px] sm:text-[10px] font-mono font-extrabold text-white drop-shadow leading-none">
+          {seatCode}
+        </span>
+
+        {/* Armrests & Bottom Cushion */}
+        <div className="w-full flex items-center justify-between px-0.5 pb-0.5">
+          <div className="w-1 h-2 rounded-full bg-white/30" />
+          <div className="h-0.5 flex-1 mx-0.5 bg-black/40 rounded" />
+          <div className="w-1 h-2 rounded-full bg-white/30" />
+        </div>
+      </button>
+    );
   };
 
   return (
@@ -355,7 +515,7 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                 </div>
               </div>
 
-              {/* Breakdown Cards */}
+              {/* Breakdown Cards - Sorted Descending by Bundle Size */}
               <div>
                 <span className="text-xs uppercase font-mono font-bold tracking-widest text-slate-300 block mb-3 flex items-center space-x-2">
                   <Layers className="w-4 h-4 text-cyan-400" />
@@ -363,34 +523,39 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                  {bookingResult.breakdown &&
-                    Object.entries(bookingResult.breakdown).map(([sizeStr, count]) => {
-                      const size = Number(sizeStr);
-                      const subtotal = size * count;
-                      return (
-                        <div
-                          key={sizeStr}
-                          className="p-4 rounded-2xl bg-[#090E20]/90 border border-white/10 flex items-center justify-between shadow-sm"
-                        >
-                          <div>
-                            <div className="font-cinematic text-3xl text-white">
-                              {size} <span className="text-xs font-mono text-slate-400 font-normal">Seats</span>
-                            </div>
-                            <div className="text-[11px] font-mono text-slate-400 mt-0.5">
-                              {subtotal} total seats
-                            </div>
+                  {sortedTiers.map((tier, idx) => {
+                    const design = getTierDesign(idx, tier.size);
+                    const subtotal = tier.size * tier.count;
+                    return (
+                      <div
+                        key={tier.size}
+                        className="p-4 rounded-2xl bg-[#090E20]/90 border border-white/10 flex items-center justify-between shadow-sm hover:border-white/20 transition-all"
+                      >
+                        <div>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className={`w-2 h-2 rounded-full ${design.dot}`} />
+                            <span className="text-[10px] uppercase font-mono font-bold text-slate-400 tracking-wider">
+                              Tier {idx + 1}
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <span className="text-[10px] uppercase font-mono font-bold text-yellow-400 tracking-widest block">
-                              Quantity
-                            </span>
-                            <span className="font-cinematic text-3xl text-white">
-                              &times; {count}
-                            </span>
+                          <div className="font-cinematic text-3xl text-white">
+                            {tier.size} <span className="text-xs font-mono text-slate-400 font-normal">Seats/Pack</span>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-400 mt-0.5">
+                            {subtotal} total seats across {tier.count} bundle{tier.count > 1 ? 's' : ''}
                           </div>
                         </div>
-                      );
-                    })}
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-mono font-bold text-yellow-400 tracking-widest block">
+                            Bundles
+                          </span>
+                          <span className="font-cinematic text-3xl text-white">
+                            &times; {tier.count}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -398,88 +563,208 @@ export const BookingView: React.FC<BookingViewProps> = ({ cinemas, onCinemaCreat
               <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-xs text-slate-300 font-mono flex items-center justify-between flex-wrap gap-2">
                 <span className="text-slate-400 uppercase font-bold text-[10px]">Seat Verification:</span>
                 <span className="text-emerald-300 font-bold">
-                  {bookingResult.breakdown &&
-                    Object.entries(bookingResult.breakdown)
-                      .map(([size, count]) => `(${size} × ${count})`)
-                      .join(' + ')}{' '}
+                  {sortedTiers
+                    .map(t => `(${t.size} × ${t.count})`)
+                    .join(' + ')}{' '}
                   = {bookingResult.group_size} Seats (Exact Match)
                 </span>
               </div>
 
               {/* INTERACTIVE AUDITORIUM SEATING MAP */}
               <div className="pt-4 border-t border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-mono font-bold tracking-widest text-slate-300 flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-yellow-400" />
-                    <span>Theatrical Auditorium Seating Chart</span>
-                  </span>
-                  <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    {bookingResult.group_size} Reserved Seats &bull; 0 Empty
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs uppercase font-mono font-bold tracking-widest text-slate-300 flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-yellow-400" />
+                      <span>Theatrical Auditorium Seating Plan</span>
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      Tier-wise seat allocation with assigned cinema armchairs
+                    </span>
+                  </div>
+
+                  {/* Dual View Mode Selector */}
+                  <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-astral-surface border border-astral-border self-start sm:self-auto shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('auditorium')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
+                        viewMode === 'auditorium'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold shadow-glow-doom'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Grid className="w-3.5 h-3.5" />
+                      <span>Floor Plan View</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('tiers')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
+                        viewMode === 'tiers'
+                          ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-bold shadow-glow-gold'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Tier Pods View</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-[#060913] border border-white/10 shadow-inner space-y-6">
+                <div className="p-4 sm:p-6 rounded-3xl bg-[#060913] border border-white/10 shadow-inner space-y-6">
                   {/* Curved IMAX Screen Graphic */}
                   <div className="relative text-center pb-2">
-                    <div className="w-full max-w-md mx-auto h-7 rounded-t-[100px] border-t-4 border-cyan-400 bg-gradient-to-b from-cyan-400/25 to-transparent flex items-center justify-center shadow-[0_-8px_20px_rgba(34,211,238,0.35)]">
-                      <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-cyan-200 font-extrabold">
-                        CURVED IMAX 8K LASER SCREEN
+                    <div className="w-full max-w-lg mx-auto h-8 rounded-t-[100px] border-t-4 border-cyan-400 bg-gradient-to-b from-cyan-400/25 to-transparent flex items-center justify-center shadow-[0_-10px_25px_rgba(34,211,238,0.35)]">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-cyan-200 font-extrabold flex items-center space-x-2">
+                        <span>CURVED THEATRICAL IMAX 8K SCREEN</span>
                       </span>
+                    </div>
+                    <div className="text-[9px] font-mono text-cyan-400/60 uppercase tracking-widest mt-1">
+                      ▲ SCREEN DIRECTION &bull; ALL EYES THIS WAY ▲
                     </div>
                   </div>
 
-                  {/* Seat Clusters by Bundle Breakdown */}
-                  <div className="space-y-4">
-                    {bookingResult.breakdown &&
-                      Object.entries(bookingResult.breakdown).map(([sizeStr, count], bIdx) => {
-                        const size = Number(sizeStr);
-                        const palette = [
-                          { border: 'border-yellow-400/70', bg: 'bg-yellow-400/15', text: 'text-yellow-300', dot: 'bg-yellow-400', badge: 'bg-yellow-500/20 text-yellow-300' },
-                          { border: 'border-emerald-400/70', bg: 'bg-emerald-400/15', text: 'text-emerald-300', dot: 'bg-emerald-400', badge: 'bg-emerald-500/20 text-emerald-300' },
-                          { border: 'border-cyan-400/70', bg: 'bg-cyan-400/15', text: 'text-cyan-300', dot: 'bg-cyan-400', badge: 'bg-cyan-500/20 text-cyan-300' },
-                          { border: 'border-violet-400/70', bg: 'bg-violet-400/15', text: 'text-violet-300', dot: 'bg-violet-400', badge: 'bg-violet-500/20 text-violet-300' },
-                        ][bIdx % 4];
+                  {/* VIEW MODE 1: AUDITORIUM FLOOR PLAN WITH AISLE */}
+                  {viewMode === 'auditorium' && (
+                    <div className="space-y-4">
+                      {bundlePacks.map(pack => {
+                        const leftCount = Math.ceil(pack.bundleSize / 2);
+                        const rightCount = Math.floor(pack.bundleSize / 2);
 
                         return (
-                          <div key={sizeStr} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-mono">
+                          <div key={pack.id} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-2">
                               <span className="flex items-center space-x-2">
-                                <span className={`w-2.5 h-2.5 rounded-full ${palette.dot} shadow-sm`} />
+                                <span className={`w-2.5 h-2.5 rounded-full ${pack.design.dot}`} />
                                 <span className="font-bold text-slate-200">
-                                  Bundle Tier {bIdx + 1}: {count} &times; ({size}-Seat Pack)
+                                  Row {pack.rowLetter} &bull; {pack.tierName}
+                                  {pack.totalPacksInTier > 1 ? ` (Pack #${pack.packNumber} of ${pack.totalPacksInTier})` : ''}
                                 </span>
                               </span>
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${palette.badge}`}>
-                                {size * count} Total Seats
+                              <span className="text-slate-400 font-bold">
+                                {pack.bundleSize} Reserved Seats
                               </span>
                             </div>
 
-                            {/* Render Individual Seats for this Bundle Tier (up to 100 max per tier for visual clarity) */}
-                            <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-[#090E20]/60 border border-white/5">
-                              {Array.from({ length: Math.min(size * count, 120) }).map((_, seatIdx) => (
-                                <div
-                                  key={seatIdx}
-                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-t-lg rounded-b-xs border ${palette.border} ${palette.bg} flex items-center justify-center text-[10px] font-mono font-bold ${palette.text} transition-transform hover:scale-125 cursor-pointer shadow-sm`}
-                                  title={`Bundle ${size}-seat pack: Seat #${seatIdx + 1}`}
-                                >
-                                  {seatIdx + 1}
+                            <div className="flex items-center justify-center p-3 sm:p-4 rounded-2xl bg-[#090E20]/80 border border-white/5 overflow-x-auto gap-2 sm:gap-4">
+                              {/* Left Row Letter Badge */}
+                              <div className="w-8 h-8 rounded-xl bg-[#070A14] border border-white/10 flex items-center justify-center text-xs font-mono font-bold text-slate-300 shadow-sm flex-shrink-0">
+                                {pack.rowLetter}
+                              </div>
+
+                              {/* Left Wing Seats */}
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {Array.from({ length: leftCount }).map((_, i) =>
+                                  renderArmchair(pack, i + 1)
+                                )}
+                              </div>
+
+                              {/* Center Aisle Walkway */}
+                              <div className="flex flex-col items-center justify-center px-1.5 sm:px-3 py-1 flex-shrink-0">
+                                <div className="h-9 border-l-2 border-dashed border-cyan-500/30 flex items-center justify-center">
+                                  <span className="text-[8px] font-mono tracking-widest uppercase text-cyan-400/80 px-1 font-bold">
+                                    AISLE
+                                  </span>
                                 </div>
-                              ))}
-                              {size * count > 120 && (
-                                <div className="flex items-center px-2 text-xs font-mono text-slate-400">
-                                  + {size * count - 120} more reserved seats
-                                </div>
-                              )}
+                              </div>
+
+                              {/* Right Wing Seats */}
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {Array.from({ length: rightCount }).map((_, i) =>
+                                  renderArmchair(pack, leftCount + i + 1)
+                                )}
+                              </div>
+
+                              {/* Right Row Letter Badge */}
+                              <div className="w-8 h-8 rounded-xl bg-[#070A14] border border-white/10 flex items-center justify-center text-xs font-mono font-bold text-slate-300 shadow-sm flex-shrink-0">
+                                {pack.rowLetter}
+                              </div>
                             </div>
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {/* VIEW MODE 2: TIER-WISE BUNDLE PODS */}
+                  {viewMode === 'tiers' && (
+                    <div className="space-y-5">
+                      {sortedTiers.map((tier, tierIdx) => {
+                        const design = getTierDesign(tierIdx, tier.size);
+                        const tierPacks = bundlePacks.filter(p => p.tierIndex === tierIdx);
+
+                        return (
+                          <div
+                            key={tier.size}
+                            className="p-4 sm:p-5 rounded-2xl bg-[#090E20]/70 border border-white/10 space-y-3.5 shadow-sm"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/10">
+                              <div className="flex items-center space-x-2">
+                                <span className={`w-3 h-3 rounded-full ${design.dot} shadow-sm`} />
+                                <h4 className="font-cinematic text-xl text-white tracking-wide">
+                                  Bundle Tier {tierIdx + 1}: {tier.count} &times; ({tier.size}-Seat Pack)
+                                </h4>
+                              </div>
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold self-start sm:self-auto border ${design.badge}`}>
+                                {tier.size * tier.count} Total Seats &bull; {tier.count} Bundle{tier.count > 1 ? 's' : ''}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                              {tierPacks.map(pack => (
+                                <div
+                                  key={pack.id}
+                                  className="p-3.5 rounded-xl bg-[#070A14] border border-white/5 space-y-2.5"
+                                >
+                                  <div className="flex items-center justify-between text-xs font-mono">
+                                    <span className="font-bold text-slate-300">
+                                      Bundle #{pack.packNumber}: Row {pack.rowLetter}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400">
+                                      Seats {pack.rowLetter}1 – {pack.rowLetter}{pack.bundleSize}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-black/40 border border-white/5">
+                                    {Array.from({ length: pack.bundleSize }).map((_, seatIdx) =>
+                                      renderArmchair(pack, seatIdx + 1, true)
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Interactive Seat Inspector HUD */}
+                  <div className="p-3.5 rounded-2xl bg-[#080D1C] border border-white/10 flex items-center justify-between flex-wrap gap-2 text-xs font-mono shadow-inner">
+                    <div className="flex items-center space-x-2">
+                      <Armchair className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      <span className="text-slate-400 font-bold">SEAT INSPECTOR:</span>
+                      {activeSeat ? (
+                        <span className="text-white font-bold bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">
+                          {activeSeat.seatCode} &bull; Row {activeSeat.rowLetter}, Seat {activeSeat.seatNum} &bull; {activeSeat.tierName}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 italic">
+                          Click or hover any armchair to inspect reservation details
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-1.5 text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>{bookingResult.group_size} SEATS RESERVED &bull; 0 EMPTY</span>
+                    </div>
                   </div>
 
                   {/* Auditorium Exit / Aisle Guidance */}
                   <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px] font-mono text-slate-400">
                     <span>&larr; WEST AISLE / EXIT</span>
-                    <span className="uppercase text-slate-500">Center Auditorium Row</span>
+                    <span className="uppercase text-slate-400">Dolby Atmos Surround System</span>
                     <span>EAST AISLE / EXIT &rarr;</span>
                   </div>
                 </div>
