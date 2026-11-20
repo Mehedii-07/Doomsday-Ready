@@ -8,7 +8,14 @@ import {
   ApiError,
 } from '../types';
 
-const API_BASE = '/api';
+const getApiBase = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+  const cleaned = envUrl.trim().replace(/\/$/, '');
+  return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
+};
+
+const API_BASE = getApiBase();
 
 export class CustomApiError extends Error {
   status: number;
