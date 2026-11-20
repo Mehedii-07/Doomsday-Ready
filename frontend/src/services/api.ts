@@ -16,6 +16,7 @@ const getApiBase = (): string => {
 };
 
 const API_BASE = getApiBase();
+console.log('[Doomsday Ready] API Base URL initialized:', API_BASE);
 
 export class CustomApiError extends Error {
   status: number;

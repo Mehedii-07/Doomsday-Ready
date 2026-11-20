@@ -38,11 +38,17 @@ export const App: React.FC = () => {
     const interval = setInterval(async () => {
       try {
         await api.checkHealth();
-        setApiOnline(true);
+        setApiOnline(prev => {
+          if (!prev) {
+            // Server just woke up! Reload data automatically
+            loadData();
+          }
+          return true;
+        });
       } catch {
         setApiOnline(false);
       }
-    }, 15000);
+    }, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -87,6 +93,16 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        {/* Cloud Spin-up Notice if Server is waking up */}
+        {!apiOnline && movies.length === 0 && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-mono flex items-center space-x-3 shadow-glow-gold animate-fadeIn">
+            <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            <div className="flex-1">
+              <strong>Connecting to Server...</strong> If this is your first visit, Render free tier spins down after inactivity and takes ~30–45s to wake up. Timeline data will load automatically once connected.
+            </div>
+          </div>
+        )}
+
         {activeTab === 'movies' && (
           <MoviesView
             movies={movies}

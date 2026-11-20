@@ -13,13 +13,16 @@ from app.api.cinemas import router as cinemas_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create tables and seed default dataset if empty
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
+    # Startup: attempt to create tables and seed default dataset
     try:
-        seed_database(db)
-    finally:
-        db.close()
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            seed_database(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[Warning] Database initialization deferred or error on startup: {e}")
     yield
     # Shutdown logic if needed
 
@@ -50,14 +53,28 @@ async def circular_dependency_handler(request: Request, exc: CircularDependencyE
     )
 
 
-# Include API Routers under /api
-app.include_router(movies_router, prefix="/api")
-app.include_router(cinemas_router, prefix="/api")
+# Root landing endpoint for browser visits on Render URL
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "status": "healthy",
+        "service": "Doomsday Ready API",
+        "version": settings.VERSION,
+        "docs": "/docs",
+        "health": "/api/health",
+    }
 
 
+# Health check endpoints for Render and frontend monitoring
+@app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
     return {"status": "healthy", "service": "Doomsday Ready API", "version": settings.VERSION}
+
+
+# Include API Routers under /api
+app.include_router(movies_router, prefix="/api")
+app.include_router(cinemas_router, prefix="/api")
 
 
 @app.post("/api/reset", tags=["Admin"])
